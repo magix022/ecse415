@@ -2,6 +2,7 @@ import cv2
 import torch
 from torchvision.models.detection import maskrcnn_resnet50_fpn
 from sort import Sort  # Assuming you're using the SORT tracking algorithm
+import numpy as np
 
 # Load Mask R-CNN model
 model = maskrcnn_resnet50_fpn(pretrained=True)
@@ -54,11 +55,17 @@ def process_frame(frame, model):
     with torch.no_grad():
         prediction = model(frame_tensor)
 
-    draw_boxes(frame, prediction)
+    #draw_boxes(frame, prediction)
+    #print(prediction)
     
     # Extract bounding boxes and scores for cars (class ID for car is 3 in COCO)
-    boxes = prediction[0]['boxes'][prediction[0]['labels'] == 3].cpu().numpy()
-    scores = prediction[0]['scores'][prediction[0]['labels'] == 3].cpu().numpy()
+    # boxes = prediction[0]['boxes'][prediction[0]['labels'] == 3].cpu().numpy()
+    # scores = prediction[0]['scores'][prediction[0]['labels'] == 3].cpu().numpy()
+
+    boxes = prediction[0]['boxes']
+    scores = prediction[0]['scores']
+
+    print(boxes)
     
     # Filter detections with a confidence score above a threshold (e.g., 0.5)
     boxes = boxes[scores > 0.5]
@@ -70,15 +77,18 @@ frame_count = 0
 
 while True:
     ret, frame = video.read()
-    if not ret or frame_count > 100:
+    if not ret or frame_count > 5:
         break
     print(f"Processing frame {frame_count}")
     frame_count += 1
     # Detect cars
     boxes = process_frame(frame, model)
+    print(boxes)
     
     # Update tracker with new frame detections
     trackers = tracker.update(boxes)
+
+    print(trackers)
     
     # Draw bounding boxes and display
     for d in trackers:
