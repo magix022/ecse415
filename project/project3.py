@@ -5,6 +5,7 @@ import numpy as np
 from tqdm import tqdm
 import argparse
 import sys
+import matplotlib.pyplot as plt
 
 def print_car_count(unique_cars, frame):
     cv2.putText(frame, f'Unique cars: {unique_cars}', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (36,255,12), 2)
@@ -49,6 +50,7 @@ def process_video(
             )[0]
             detections = sv.Detections.from_ultralytics(results)
 
+
             #get only cars and persons
             car_detections = detections[detections.class_id == 2]
             car_detections = car_detections[car_detections.confidence > 0.7]
@@ -61,6 +63,13 @@ def process_video(
                     car_next_label += 1
                 car_labels.append(f"Car {car_tracker_id_to_label[tracker_id]}")
 
+            for detection in car_detections:
+                coords, _, _, _, tracker_id, _ = detection
+                x1, y1, x2, y2 = coords
+                centroid = (int((x1 + x2) / 2), int((y1 + y2) / 2))
+                if tracker_id not in car_centroids:
+                    car_centroids[tracker_id] = []
+                car_centroids[tracker_id].append(centroid)
 
             unique_cars = len(car_tracker_id_to_label)
 
@@ -103,6 +112,34 @@ def process_video(
             sink.write_frame(frame=annotated_labeled_frame)
 
     print(f"Unique cars: {unique_cars}, Unique persons: {unique_persons}")
+
+    for tracker_id in car_centroids:
+        car_centroids[tracker_id] = np.array(car_centroids[tracker_id])
+
+    #mean displacement vector of each car
+
+
+    mean_displacement = np.zeros(len(car_centroids))
+    for i, tracker_id in enumerate(car_centroids):
+        if len(car_centroids[tracker_id]) < 2:
+            continue
+        mean_displacement[i] = np.mean(np.linalg.norm(np.diff(car_centroids[tracker_id], axis=0), axis=1))
+
+    #replace nan values with 0
+    mean_displacement = np.nan_to_num(mean_displacement)
+
+    #print(mean_displacement)
+    total_mean_displacement = np.mean(mean_displacement)
+    std = np.std(mean_displacement)
+
+    
+
+    print(f"Mean displacement: {total_mean_displacement}, Standard deviation: {std}")
+
+
+    #get number of values inside 1/2 standard deviation
+    inside_std = np.sum(np.abs(mean_displacement - total_mean_displacement) < std/2)
+    print(f"Estimated number of parked cars: {inside_std}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
