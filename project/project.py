@@ -146,14 +146,20 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("video_to_process", type=int, help="Video to process. 1: mcgill_drive.mp4, 2: st-catherines_drive.mp4")
 
+    PATH_TO_MCGILL = "videos/input/mcgill_drive.mp4"
+    PATH_TO_ST_CATHERINES = "videos/input/st-catherines_drive.mp4"
+
+    PATH_TO_MCGILL_OUTPUT = "videos/output/out_mcgill_drive.mp4"
+    PATH_TO_ST_CATHERINES_OUTPUT = "videos/output/out_st-catherines_drive.mp4"
+
     args = parser.parse_args()
 
     if args.video_to_process == 1:
-        video = "videos/input/mcgill_drive.mp4"
-        output = "videos/output/out_mcgill_drive.mp4"
+        video = PATH_TO_MCGILL
+        output = PATH_TO_MCGILL_OUTPUT
     elif args.video_to_process == 2:
-        video = "videos/input/st-catherines_drive.mp4"
-        output = "videos/output/out_st-catherines_drive.mp4"
+        video = PATH_TO_ST_CATHERINES
+        output = PATH_TO_ST_CATHERINES_OUTPUT
     else:
         print("Invalid video. 1: mcgill_drive.mp4, 2: st-catherines_drive.mp4")
         sys.exit(1)
